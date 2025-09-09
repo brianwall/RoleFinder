@@ -1,10 +1,3 @@
-// /api/role-finder.js
-// Inputs (POST JSON):
-// { company: string, roles: string[], location?: string, numPerRole?: number, returnAll?: boolean }
-// Output:
-//   default -> { topMatch, totalCandidates }
-//   if returnAll=true -> { topMatch, totalCandidates, candidates: [...] }
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Use POST with JSON body' });
@@ -42,10 +35,10 @@ export default async function handler(req, res) {
     const scoreTitle = ({ title, role, company }) => {
       const t = norm(title), r = norm(role), c = norm(company);
       let s = 0;
-      if (r && t.includes(r)) s += 5;           // exact role phrase
-      if (c && t.includes(c)) s += 4;           // company phrase
-      if (r) for (const tok of r.split(/\s+/)) if (tok && t.includes(tok)) s += 1; // token coverage
-      if (c && t.includes(` at ${c}`)) s += 2;  // pattern: at Company
+      if (r && t.includes(r)) s += 5;
+      if (c && t.includes(c)) s += 4;
+      if (r) for (const tok of r.split(/\s+/)) if (tok && t.includes(tok)) s += 1;
+      if (c && t.includes(` at ${c}`)) s += 2;
       if (t.includes('| linkedin')) s += 1;
       return s;
     };
@@ -70,7 +63,7 @@ export default async function handler(req, res) {
 
       if (!resp.ok) {
         const txt = await resp.text().catch(() => '');
-        res.status(502).json({ error: 'SERP API error', status: resp.status, body: txt });
+        res.status(502).json({ error: 'SERPER error', status: resp.status, body: txt });
         return;
       }
 
@@ -103,8 +96,9 @@ export default async function handler(req, res) {
     const topMatch = all[0] || null;
 
     res.status(200).json(
-      returnAll ? { topMatch, totalCandidates: all.length, candidates: all }
-                : { topMatch, totalCandidates: all.length }
+      returnAll
+        ? { topMatch, totalCandidates: all.length, candidates: all }
+        : { topMatch, totalCandidates: all.length }
     );
   } catch (err) {
     console.error(err);
